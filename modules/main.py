@@ -12,9 +12,7 @@ def switch_boot0(dev):
         dev.reboot()
         raise RuntimeError("what's wrong with your BOOT0?")
 
-def flash_binary(dev, path, start_block, max_size=0):
-    with open(path, "rb") as fin:
-        data = fin.read()
+def flash_data(dev, data, start_block, max_size=0):
     while len(data) % 0x200 != 0:
         data += b"\x00"
 
@@ -26,6 +24,29 @@ def flash_binary(dev, path, start_block, max_size=0):
         print("[{} / {}]".format(x + 1, blocks), end='\r')
         dev.emmc_write(start_block + x, data[x * 0x200:(x + 1) * 0x200])
     print("")
+
+def flash_binary(dev, path, start_block, max_size=0):
+    with open(path, "rb") as fin:
+        data = fin.read()
+    while len(data) % 0x200 != 0:
+        data += b"\x00"
+
+    flash_data(dev, data, start_block, max_size=0)
+
+def dump_binary(dev, path, start_block, max_size=0):
+    with open(path, "w+b") as fout:
+        blocks = max_size // 0x200
+        for x in range(blocks):
+            print("[{} / {}]".format(x + 1, blocks), end='\r')
+            fout.write(dev.emmc_read(start_block + x))
+    print("")
+
+def force_fastboot(dev, gpt):
+    switch_user(dev)
+    block = list(dev.emmc_read(gpt["MISC"][0]))
+    block[0:16] = "FASTBOOT_PLEASE\x00".encode("utf-8")
+    dev.emmc_write(gpt["MISC"][0], bytes(block))
+    block = dev.emmc_read(gpt["MISC"][0])
 
 def switch_user(dev):
     dev.emmc_switch(0)
