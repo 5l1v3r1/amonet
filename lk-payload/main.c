@@ -175,6 +175,8 @@ int main() {
         video_printf("=> RECOVERY mode...");
     }
 
+    printf("g_boot_mode %u\n", *g_boot_mode);
+
     // enable all commands
     patch = (void*)0x4BD0D838;
     *patch++ = 0x2000; // movs r0, #0
