@@ -98,7 +98,13 @@ def main():
         log("rpmb looks broken; if this is expected (i.e. you're retrying the exploit) press enter, otherwise terminate with Ctrl+C")
         input()
 
-    # 4) Zero out rpmb to enable downgrade
+    # Clear preloader so, we get into bootrom without shorting, should the script stall (we flash preloader as last step)
+    # 4) Downgrade preloader
+    log("Clear preloader header")
+    switch_boot0(dev)
+    flash_data(dev, b"EMMC_BOOT" + b"\x00" * ((0x200 * 8) - 9), 0)
+
+    # 5) Zero out rpmb to enable downgrade
     log("Downgrade rpmb")
     dev.rpmb_write(b"\x00" * 0x100)
     log("Recheck rpmb")
@@ -108,15 +114,10 @@ def main():
         raise RuntimeError("downgrade failure, giving up")
     log("rpmb downgrade ok")
 
-    # 5) Install lk-payload
+    # 6) Install lk-payload
     log("Flash lk-payload")
     switch_boot0(dev)
     flash_binary(dev, "../lk-payload/build/payload.bin", 0x80000 // 0x200)
-
-    # 6) Downgrade preloader
-    log("Flash preloader")
-    switch_boot0(dev)
-    flash_binary(dev, "../bin/boot0-short.bin", 0)
 
     # 7) Downgrade tz
     log("Flash tz")
@@ -131,7 +132,16 @@ def main():
     # 9) Flash microloader
     log("Inject microloader")
     switch_user(dev)
-    flash_binary(dev, "../bin/microloader.bin", gpt["boot"][0], gpt["boot"][1] * 0x200)
+    boot_hdr1 = dev.emmc_read(gpt["boot"][0]) + dev.emmc_read(gpt["boot"][0] + 1)
+    boot_hdr2 = dev.emmc_read(gpt["boot"][0] + 2) + dev.emmc_read(gpt["boot"][0] + 3)
+    flash_binary(dev, "../bin/microloader.bin", gpt["boot"][0], 2 * 0x200)
+    if boot_hdr2[0:8] != b"ANDROID!":
+        flash_data(dev, boot_hdr1, gpt["boot"][0] + 2, 2 * 0x200)
+
+    # 10) Downgrade preloader
+    log("Flash preloader")
+    switch_boot0(dev)
+    flash_binary(dev, "../bin/boot0-short.bin", 0)
 
     # Reboot (to fastboot)
     log("Reboot to unlocked fastboot")
