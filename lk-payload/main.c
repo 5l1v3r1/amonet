@@ -156,6 +156,14 @@ int main() {
           fastboot = 1;
         }
       }
+
+      // recovery flag on MISC
+      if(strncmp(bootloader_msg, "boot-recovery", 13) == 0) {
+        *g_boot_mode = 2;
+        // reset flag
+        memset(bootloader_msg, 0, 0x10);
+        dev->write(dev, bootloader_msg, g_misc * 0x200, 0x10, USER_PART);
+      }
     }
 
     uint16_t *patch;
