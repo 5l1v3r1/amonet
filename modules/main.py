@@ -48,6 +48,13 @@ def force_fastboot(dev, gpt):
     dev.emmc_write(gpt["MISC"][0], bytes(block))
     block = dev.emmc_read(gpt["MISC"][0])
 
+def force_recovery(dev, gpt):
+    switch_user(dev)
+    block = list(dev.emmc_read(gpt["MISC"][0]))
+    block[0:16] = "boot-recovery\x00\x00\x00".encode("utf-8")
+    dev.emmc_write(gpt["MISC"][0], bytes(block))
+    block = dev.emmc_read(gpt["MISC"][0])
+
 def switch_user(dev):
     dev.emmc_switch(0)
     block = dev.emmc_read(0)
@@ -68,6 +75,9 @@ def parse_gpt(dev):
     return parts
 
 def main():
+
+    minimal = False
+
     dev = Device()
     dev.find_device()
 
@@ -76,6 +86,13 @@ def main():
 
     # 0.2) Load brom payload
     load_payload(dev, "../brom-payload/build/payload.bin")
+
+
+    if len(sys.argv) == 2 and sys.argv[1] == "minimal":
+        log("Running in minimal mode, assuming LK, TZ, LK-payload and TWRP to have already been flashed.")
+        log("If this is correct (i.e. you used \"brick\" option in step 1) press enter, otherwise terminate with Ctrl+C")
+        input()
+        minimal = True
 
     # 1) Sanity check GPT
     log("Check GPT")
@@ -114,20 +131,21 @@ def main():
         raise RuntimeError("downgrade failure, giving up")
     log("rpmb downgrade ok")
 
-    # 6) Install lk-payload
-    log("Flash lk-payload")
-    switch_boot0(dev)
-    flash_binary(dev, "../lk-payload/build/payload.bin", 0x80000 // 0x200)
+    if not minimal:
+        # 6) Install lk-payload
+        log("Flash lk-payload")
+        switch_boot0(dev)
+        flash_binary(dev, "../lk-payload/build/payload.bin", 0x80000 // 0x200)
 
-    # 7) Downgrade tz
-    log("Flash tz")
-    switch_user(dev)
-    flash_binary(dev, "../bin/tz.bin", gpt["tee1"][0], gpt["tee1"][1] * 0x200)
+        # 7) Downgrade tz
+        log("Flash tz")
+        switch_user(dev)
+        flash_binary(dev, "../bin/tz.bin", gpt["tee1"][0], gpt["tee1"][1] * 0x200)
 
-    # 8) Downgrade lk
-    log("Flash lk")
-    switch_user(dev)
-    flash_binary(dev, "../bin/lk.bin", gpt["lk"][0], gpt["lk"][1] * 0x200)
+        # 8) Downgrade lk
+        log("Flash lk")
+        switch_user(dev)
+        flash_binary(dev, "../bin/lk.bin", gpt["lk"][0], gpt["lk"][1] * 0x200)
 
     # 9) Flash microloader
     log("Inject microloader")
@@ -138,13 +156,20 @@ def main():
     if boot_hdr2[0:8] != b"ANDROID!":
         flash_data(dev, boot_hdr1, gpt["boot"][0] + 2, 2 * 0x200)
 
+    if not minimal:
+        log("Force fastboot")
+        force_fastboot(dev, gpt)
+    else:
+        log("Force recovery")
+        force_recovery(dev, gpt)
+
     # 10) Downgrade preloader
     log("Flash preloader")
     switch_boot0(dev)
     flash_binary(dev, "../bin/boot0-short.bin", 0)
 
-    # Reboot (to fastboot)
-    log("Reboot to unlocked fastboot")
+    # Reboot (to fastboot or recovery)
+    log("Reboot")
     dev.reboot()
 
 
