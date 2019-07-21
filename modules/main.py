@@ -140,7 +140,7 @@ def main():
         # 7) Downgrade tz
         log("Flash tz")
         switch_user(dev)
-        flash_binary(dev, "../bin/tz.bin", gpt["tee1"][0], gpt["tee1"][1] * 0x200)
+        flash_binary(dev, "../bin/tz.img", gpt["tee1"][0], gpt["tee1"][1] * 0x200)
 
         # 8) Downgrade lk
         log("Flash lk")

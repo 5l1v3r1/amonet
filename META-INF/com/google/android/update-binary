@@ -102,17 +102,28 @@ if [ $? -ne 0 ] ; then
 fi
 dd if=${INSTALLER}/amonet/bin/twrp.img of=/dev/block/platform/mtk-msdc.0/by-name/boot bs=512 count=2
 
-ui_print "- updating payload"
 echo 0 > /sys/block/mmcblk0boot0/force_ro
+ui_print "- checking for GPT on boot0"
+if [[ ! $(dd if=/dev/block/mmcblk0boot0 bs=512 skip=2047 | grep "EFI PART" ) ]]; then
+  ui_print "-- no GPT found, likely nuked by following previous advice to brick preloader"
+  ui_print "-- restoring GPT"
+  dd if=/${INSTALLER}/amonet/bin/boot0.gpt of=/dev/block/mmcblk0boot0 bs=512 seek=2014
+  ui_print "-- restoring backup PL"
+  dd if=/dev/block/mmcblk0boot0 of=/dev/block/mmcblk0boot0 bs=512 skip=8 seek=520 count=512
+else
+  ui_print "-- GPT present, all good"
+fi
+
+ui_print "- updating payload"
 dd if=/${INSTALLER}/amonet/lk-payload/build/payload.bin of=/dev/block/mmcblk0boot0 bs=512 seek=${PAYLOAD_BLOCK}
 
 #ui_print "- updating preloader"
 #dd if=/${INSTALLER}/amonet/bin/boot0-short.bin of=/dev/block/mmcblk0boot0
-#echo 1 > /sys/block/mmcblk0boot0/force_ro
-#
+echo 1 > /sys/block/mmcblk0boot0/force_ro
+
 #ui_print "- updating TEE1"
 #dd if=/${INSTALLER}/amonet/bin/tz.img of=/dev/block/platform/mtk-msdc.0/by-name/TEE1_real 
-#
+
 #ui_print "- updating TEE2"
 #dd if=/${INSTALLER}/amonet/bin/tz.img of=/dev/block/platform/mtk-msdc.0/by-name/TEE2_real 
 
