@@ -13,6 +13,8 @@ struct device_t* (*get_device)() = (void*)0x4BD1EC99;
 void (*cache_clean)(void *addr, size_t sz) = (void*)0x4BD24C90;
 size_t (*video_printf)(const char *format, ...) = (void *)0x4BD30A9B;
 
+uint32_t **argptr = (void*)0x4BD00020;
+
 uint32_t* g_boot_mode = (uint32_t*) 0x4BD5D364;
 
 #define PAYLOAD_DST 0x41000000
