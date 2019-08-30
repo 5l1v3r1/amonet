@@ -1,4 +1,5 @@
 import struct
+import sys
 
 from common import Device
 from handshake import handshake
