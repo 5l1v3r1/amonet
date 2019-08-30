@@ -76,7 +76,9 @@ int main() {
     printf("This is LK-payload by xyz. Copyright 2019\n");
 
     uint32_t *arg = *argptr;
-    uint32_t* o_boot_mode = (uint32_t*) *argptr + 4; // argptr boot mode
+    uint32_t* o_boot_mode = (uint32_t*) *argptr + 1; // argptr boot mode
+
+    //hex_dump((void*)*argptr, 0x180);
 
     arg[0x53] = 4; // force 64-bit linux kernel
 
