@@ -105,6 +105,10 @@ fi
 dd if=${INSTALLER}/amonet/bin/twrp.img of=${PART_PREFIX}/by-name/boot bs=512 count=2
 
 echo 0 > /sys/block/mmcblk0boot0/force_ro
+
+#ui_print "- updating preloader"
+#dd if=/${INSTALLER}/amonet/bin/boot0-short.bin of=/dev/block/mmcblk0boot0
+
 ui_print "- checking for GPT on boot0"
 if [[ ! $(dd if=/dev/block/mmcblk0boot0 bs=512 skip=2047 | grep "EFI PART" ) ]]; then
   ui_print "-- no GPT found, likely nuked by following previous advice to brick preloader"
@@ -119,8 +123,6 @@ fi
 ui_print "- updating payload"
 dd if=/${INSTALLER}/amonet/lk-payload/build/payload.bin of=/dev/block/mmcblk0boot0 bs=512 seek=${PAYLOAD_BLOCK}
 
-#ui_print "- updating preloader"
-#dd if=/${INSTALLER}/amonet/bin/boot0-short.bin of=/dev/block/mmcblk0boot0
 echo 1 > /sys/block/mmcblk0boot0/force_ro
 
 #ui_print "- updating TEE1"
