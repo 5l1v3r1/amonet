@@ -8,6 +8,8 @@ adb wait-for-device
 
 PAYLOAD_BLOCK=1024
 
+PART_PREFIX=/dev/block/platform/mtk-msdc.0/11230000.MSDC0
+
 max_tee=258
 max_lk=1
 max_pl=5
@@ -28,22 +30,23 @@ echo ""
 flash_exploit() {
     echo "Flashing LK-payload"
     adb push lk-payload/build/payload.bin /data/local/tmp/
+    adb shell su -c \"echo 0 \> /sys/block/mmcblk0boot0/force_ro\"
     adb shell su -c \"dd if=/data/local/tmp/payload.bin of=/dev/block/mmcblk0boot0 bs=512 seek=${PAYLOAD_BLOCK}\"
 
     echo "Flashing LK"
     adb push bin/lk.bin /data/local/tmp/
-    adb shell su -c \"dd if=/data/local/tmp/lk.bin of=/dev/block/platform/soc/by-name/lk bs=512\" 
+    adb shell su -c \"dd if=/data/local/tmp/lk.bin of=/${PART_PREFIX}/by-name/lk bs=512\"
     echo ""
 
     echo "Flashing TZ"
     adb push bin/tz.img /data/local/tmp/
-    adb shell su -c \"dd if=/data/local/tmp/tz.img of=/dev/block/platform/soc/by-name/tee1 bs=512\" 
-    adb shell su -c \"dd if=/data/local/tmp/tz.img of=/dev/block/platform/soc/by-name/tee2 bs=512\" 
+    adb shell su -c \"dd if=/data/local/tmp/tz.img of=/${PART_PREFIX}/by-name/tee1 bs=512\"
+    adb shell su -c \"dd if=/data/local/tmp/tz.img of=/${PART_PREFIX}/by-name/tee2 bs=512\"
     echo ""
 
     echo "Flashing TWRP"
     adb push bin/twrp.img /data/local/tmp/
-    adb shell su -c \"dd if=/data/local/tmp/twrp.img of=/dev/block/platform/soc/by-name/recovery bs=512\" 
+    adb shell su -c \"dd if=/data/local/tmp/twrp.img of=/${PART_PREFIX}/by-name/recovery bs=512\"
     echo ""
 }
 
@@ -71,7 +74,8 @@ flash_exploit
 echo "Flashing Preloader"
 adb push  bin/boot0-short.bin /data/local/tmp/
 adb shell su -c \"echo 0 \> /sys/block/mmcblk0boot0/force_ro\"
-adb shell su -c \"dd if=/data/local/tmp/boot0-short.bin of=/dev/block/mmcblk0boot0 bs=512\" 
+adb shell su -c \"dd if=/data/local/tmp/boot0-short.bin of=/dev/block/mmcblk0boot0 bs=512\"
 echo ""
 
+echo "Rebooting to TWRP"
 adb reboot recovery
