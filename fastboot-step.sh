@@ -2,11 +2,11 @@
 
 set -e
 
-fastboot flash boot bin/recovery-inj.img
-fastboot flash recovery bin/recovery-inj.img
-fastboot reboot recovery
+fastboot flash recovery bin/twrp.img
 
 echo ""
-echo ""
-echo "If you don't see the recovery in a few seconds, try pressing the power button twice"
+echo "Hold the left volume-button, then press Enter to reboot..."
+read
+fastboot reboot
+echo "Rebooting... keep holding the button until you see the \"amazon\" logo"
 echo ""
