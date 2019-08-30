@@ -1,10 +1,11 @@
 import struct
 import os
 import sys
+import time
 
 from common import Device
 from handshake import handshake
-from load_payload import load_payload
+from load_payload import load_payload, UserInputThread
 from logger import log
 
 def check_modemmanager():
@@ -112,9 +113,11 @@ def main():
 
 
     if len(sys.argv) == 2 and sys.argv[1] == "minimal":
-        log("Running in minimal mode, assuming LK, TZ, LK-payload and TWRP to have already been flashed.")
-        log("If this is correct (i.e. you used \"brick\" option in step 1) press enter, otherwise terminate with Ctrl+C")
-        input()
+        thread = UserInputThread(msg = "Running in minimal mode, assuming LK, TZ, LK-payload and TWRP  to have already been flashed.\nIf this is correct (i.e. you used \"brick\" option in step 1) press enter, otherwise terminate with Ctrl+C")
+        thread.start()
+        while not thread.done:
+            dev.kick_watchdog()
+            time.sleep(1)
         minimal = True
 
     # 1) Sanity check GPT
@@ -135,8 +138,11 @@ def main():
     log("Check rpmb")
     rpmb = dev.rpmb_read()
     if rpmb[0:4] != b"AMZN":
-        log("rpmb looks broken; if this is expected (i.e. you're retrying the exploit) press enter, otherwise terminate with Ctrl+C")
-        input()
+        thread = UserInputThread(msg = "rpmb looks broken; if this is expected (i.e. you're retrying the exploit) press enter, otherwise terminate with Ctrl+C")
+        thread.start()
+        while not thread.done:
+            dev.kick_watchdog()
+            time.sleep(1)
 
     # Clear preloader so, we get into bootrom without shorting, should the script stall (we flash preloader as last step)
     # 4) Downgrade preloader
