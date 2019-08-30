@@ -5,6 +5,9 @@ rm -rf dist
 mkdir -p dist/unlock/amonet/bin
 cp bin/{boot0short.img,boot0.gpt,preloader.bin,minisu.img,busybox,lk.bin,tz.img,twrp.img,boot.hdr,boot.payload} dist/unlock/amonet/bin/
 
+mkdir -p dist/unlock/amonet/lk-payload/build
+cp lk-payload/build/payload.bin dist/unlock/amonet/lk-payload/build/
+
 mkdir -p dist/unlock/amonet/modules
 cp modules/{common.py,gpt.py,handshake.py,handshake2.py,load_payload.py,logger.py,main.py} dist/unlock/amonet/modules/
 
