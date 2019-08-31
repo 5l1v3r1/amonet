@@ -74,6 +74,7 @@ static void parse_gpt() {
 int main() {
     int ret = 0;
     printf("This is LK-payload by xyz. Copyright 2019\n");
+    printf("Updated version by k4y0z. Copyright 2019\n");
 
     uint32_t **argptr = (void*)0x4BD00020;
     uint32_t *arg = *argptr;
