@@ -21,7 +21,8 @@ mkdir -p dist/unlock/META-INF/com/google/android
 cp META-INF/com/google/android/{update-binary,updater-script} dist/unlock/META-INF/com/google/android/
 
 mkdir -p dist/stock/amonet/bin
-cp bin/recovery.img dist/stock/amonet/bin/
+cp bin/{boot.img,recovery.img} dist/stock/amonet/bin/
+cp return-to-stock.sh dist/stock/amonet/
 
 mkdir -p dist/full
 cp -r dist/unlock/* dist/full/
