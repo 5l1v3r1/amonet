@@ -165,7 +165,8 @@ def main():
         # 6) Install lk-payload
         log("Flash lk-payload")
         switch_boot0(dev)
-        flash_binary(dev, "../lk-payload/build/payload.bin", 0x80000 // 0x200)
+        flash_binary(dev, "../bin/preloader.bin", 520)
+        flash_binary(dev, "../lk-payload/build/payload.bin", 1024)
 
         # 7) Downgrade tz
         log("Flash tz")
