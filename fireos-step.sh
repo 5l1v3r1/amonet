@@ -32,6 +32,7 @@ flash_exploit() {
     adb push lk-payload/build/payload.bin /data/local/tmp/
     adb shell su -c \"echo 0 \> /sys/block/mmcblk0boot0/force_ro\"
     adb shell su -c \"dd if=/data/local/tmp/payload.bin of=/dev/block/mmcblk0boot0 bs=512 seek=${PAYLOAD_BLOCK}\"
+    echo ""
 
     echo "Flashing LK"
     adb push bin/lk.bin /data/local/tmp/
@@ -75,7 +76,7 @@ echo "Flashing Preloader"
 adb push  bin/boot0-short.bin /data/local/tmp/
 adb shell su -c \"echo 0 \> /sys/block/mmcblk0boot0/force_ro\"
 adb shell su -c \"dd if=/data/local/tmp/boot0-short.bin of=/dev/block/mmcblk0boot0 bs=512\"
-adb shell su -c \"dd if=/dev/block/mmcblk0boot0 of=/dev/block/mmcblk0boot0 bs=512 skip=8 seek=520 count=505\"
+adb shell su -c \"dd if=/dev/block/mmcblk0boot0 of=/dev/block/mmcblk0boot0 bs=512 skip=8 seek=520 count=504\"
 echo ""
 
 echo "Rebooting to TWRP"
