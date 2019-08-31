@@ -75,6 +75,7 @@ int main() {
     int ret = 0;
     printf("This is LK-payload by xyz. Copyright 2019\n");
 
+    uint32_t **argptr = (void*)0x4BD00020;
     uint32_t *arg = *argptr;
     uint32_t* o_boot_mode = (uint32_t*) *argptr + 1; // argptr boot mode
 
