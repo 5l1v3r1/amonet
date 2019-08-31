@@ -117,6 +117,14 @@ int main() {
 
     struct device_t *dev = get_device();
 
+    //Check if backup payload is present and copy if not
+    dev->read(dev, BACKUP_SRC, (void*)0x45000000, PAYLOAD_SIZE, BOOT0_PART); // boot0 partition, read 512K
+    if (memcmp((void*)PAYLOAD_DST, (void*)0x45000000, PAYLOAD_SIZE)) {
+	printf("Backup payload not found...\n");
+	printf("...copy payload to backup location\n");
+        dev->write(dev, (void*)PAYLOAD_DST, BACKUP_SRC, PAYLOAD_SIZE, BOOT0_PART);
+    }
+
     //uint8_t tmp[0x10] = { 0 };
     //dev->read(dev, g_boot * 0x200 + 0x400, tmp, 0x10, USER_PART);
     uint8_t *tmp = (void*)0x4BD5C3B0;

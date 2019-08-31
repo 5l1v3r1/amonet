@@ -21,3 +21,5 @@ uint32_t* g_boot_mode = (uint32_t*) 0x4BD5D364;
 
 #define BOOT0_PART 1
 #define USER_PART 8
+
+#define BACKUP_SRC 0x200000

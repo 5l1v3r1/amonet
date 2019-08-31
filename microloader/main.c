@@ -35,6 +35,11 @@ int main() {
     uint32_t *dst = (void*)PAYLOAD_DST;
     size_t ret = dev->read(dev, PAYLOAD_SRC, dst, PAYLOAD_SIZE, BOOT0_PART); // boot0 partition, read 512K
 
+    if(*dst != 0xe3a0d442) {
+        puts("Payload not found, trying backup payload");
+        size_t ret = dev->read(dev, BACKUP_SRC, dst, PAYLOAD_SIZE, BOOT0_PART); // boot0 partition, read 512K
+    }
+
     cache_clean(dst, PAYLOAD_SIZE);
 
     // Jump to the payload
