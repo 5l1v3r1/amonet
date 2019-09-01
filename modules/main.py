@@ -111,9 +111,8 @@ def main():
     load_payload(dev, "../brom-payload/build/payload.bin")
     dev.kick_watchdog()
 
-
     if len(sys.argv) == 2 and sys.argv[1] == "minimal":
-        thread = UserInputThread(msg = "Running in minimal mode, assuming LK, TZ, LK-payload and TWRP  to have already been flashed.\nIf this is correct (i.e. you used \"brick\" option in step 1) press enter, otherwise terminate with Ctrl+C")
+        thread = UserInputThread(msg = "Running in minimal mode, assuming LK, TZ, LK-payload and TWRP to have already been flashed.\nIf this is correct (i.e. you used \"brick\" option in step 1) press enter, otherwise terminate with Ctrl+C")
         thread.start()
         while not thread.done:
             dev.kick_watchdog()
@@ -162,10 +161,15 @@ def main():
     dev.kick_watchdog()
 
     if not minimal:
+        # 6) Install preloader
+        log("Flash preloader")
+        switch_boot0(dev)
+        flash_binary(dev, "../bin/preloader.bin", 8)
+        flash_binary(dev, "../bin/preloader.bin", 520)
+
         # 6) Install lk-payload
         log("Flash lk-payload")
         switch_boot0(dev)
-        flash_binary(dev, "../bin/preloader.bin", 520)
         flash_binary(dev, "../lk-payload/build/payload.bin", 1024)
 
         # 7) Downgrade tz
@@ -195,9 +199,10 @@ def main():
         force_recovery(dev, gpt)
 
     # 10) Downgrade preloader
-    log("Flash preloader")
+    log("Flash preloader header")
     switch_boot0(dev)
-    flash_binary(dev, "../bin/boot0-short.bin", 0)
+    flash_binary(dev, "../bin/preloader.hdr0", 0, 4)
+    flash_binary(dev, "../bin/preloader.hdr1", 4, 4)
 
     # Reboot (to fastboot or recovery)
     log("Reboot")

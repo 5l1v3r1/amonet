@@ -28,9 +28,15 @@ echo "TZ version: ${tee_version} (${max_tee})"
 echo ""
 
 flash_exploit() {
+    echo "Flashing PL"
+    adb push bin/preloader.bin /data/local/tmp/
+    adb shell su -c \"echo 0 \> /sys/block/mmcblk0boot0/force_ro\"
+    adb shell su -c \"dd if=/data/local/tmp/preloader.bin of=/dev/block/mmcblk0boot0 bs=512 seek=8\"
+    adb shell su -c \"dd if=/data/local/tmp/preloader.bin of=/dev/block/mmcblk0boot0 bs=512 seek=520\"
+    echo ""
+
     echo "Flashing LK-payload"
     adb push lk-payload/build/payload.bin /data/local/tmp/
-    adb shell su -c \"echo 0 \> /sys/block/mmcblk0boot0/force_ro\"
     adb shell su -c \"dd if=/data/local/tmp/payload.bin of=/dev/block/mmcblk0boot0 bs=512 seek=${PAYLOAD_BLOCK}\"
     echo ""
 
@@ -63,8 +69,9 @@ if [ "$1" = "brick" ] || [ $tee_version -gt $max_tee ] || [ $lk_version -gt $max
 
     flash_exploit
 
-    echo "Rebooting..., continue with bootrom-step-minimal.sh"
-    adb shell reboot
+    echo "Powering off..."
+    adb shell reboot -p
+    echo "Unplug device, start bootrom-step-minimal.sh and plug it back in."
     exit 0
   fi
   exit 1
@@ -72,11 +79,12 @@ fi
 
 flash_exploit
 
-echo "Flashing Preloader"
-adb push  bin/boot0-short.bin /data/local/tmp/
+echo "Flashing PL header"
+adb push  bin/preloader.hdr0 /data/local/tmp/
+adb push  bin/preloader.hdr1 /data/local/tmp/
 adb shell su -c \"echo 0 \> /sys/block/mmcblk0boot0/force_ro\"
-adb shell su -c \"dd if=/data/local/tmp/boot0-short.bin of=/dev/block/mmcblk0boot0 bs=512\"
-adb shell su -c \"dd if=/dev/block/mmcblk0boot0 of=/dev/block/mmcblk0boot0 bs=512 skip=8 seek=520 count=504\"
+adb shell su -c \"dd if=/data/local/tmp/preloader.hdr0 of=/dev/block/mmcblk0boot0 bs=512 count=4\"
+adb shell su -c \"dd if=/data/local/tmp/preloader.hdr1 of=/dev/block/mmcblk0boot0 bs=512 count=4 seek=4\"
 echo ""
 
 echo "Rebooting to TWRP"

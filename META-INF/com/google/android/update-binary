@@ -81,7 +81,7 @@ INSTALLER=$TMPDIR/install
 rm -rf $TMPDIR 2>/dev/null
 mkdir -p $INSTALLER 2>/dev/null
 
-unzip -o "$ZIP" 'amonet/bin/twrp.img' 'amonet/lk-payload/build/payload.bin' 'amonet/bin/boot0-short.bin' 'amonet/bin/tz.img' 'amonet/bin/boot0.gpt' -d $INSTALLER >&2
+unzip -o "$ZIP" 'amonet/bin/twrp.img' 'amonet/lk-payload/build/payload.bin' 'amonet/bin/preloader.hdr0', 'amonet/bin/preloader.hdr1', 'amonet/bin/preloader.bin', 'amonet/bin/tz.img' 'amonet/bin/boot0.gpt' -d $INSTALLER >&2
 
 ##########################################################################################
 # Main
@@ -93,7 +93,6 @@ ui_print "amonet updater"
 ui_print "- updating TWRP"
 dd if=${INSTALLER}/amonet/bin/twrp.img of=${PART_PREFIX}/by-name/recovery
 
-ui_print "- updating boot patch"
 dd if=${PART_PREFIX}/by-name/recovery of=/tmp/recovery_amonet.hdr bs=512 count=2
 dd if=${PART_PREFIX}/by-name/boot of=/tmp/boot_amonet.hdr bs=512 count=2
 dd if=${PART_PREFIX}/by-name/boot of=/tmp/boot_amonet.hdr2 bs=512 count=2 skip=2
@@ -102,20 +101,24 @@ if [ $? -ne 0 ] ; then
     ui_print "- patching boot"
     dd if=/tmp/boot_amonet.hdr of=${PART_PREFIX}/by-name/boot bs=512 count=2 seek=2
 fi
+ui_print "- updating microloader"
 dd if=${INSTALLER}/amonet/bin/twrp.img of=${PART_PREFIX}/by-name/boot bs=512 count=2
 
 echo 0 > /sys/block/mmcblk0boot0/force_ro
 
 #ui_print "- updating preloader"
-#dd if=/${INSTALLER}/amonet/bin/boot0-short.bin of=/dev/block/mmcblk0boot0
+#dd if=/${INSTALLER}/amonet/bin/preloader.hdr0 of=/dev/block/mmcblk0boot0 bs=512 count=4
+#dd if=/${INSTALLER}/amonet/bin/preloader.hdr1 of=/dev/block/mmcblk0boot0 bs=512 seek=4 count=4
+#dd if=/${INSTALLER}/amonet/bin/preloader.bin of=/dev/block/mmcblk0boot0 bs=512 seek=8
+
+ui_print "- updating backup PL"
+dd if=/${INSTALLER}/amonet/bin/preloader.bin of=/dev/block/mmcblk0boot0 bs=512 seek=520 count=504
 
 ui_print "- checking for GPT on boot0"
 if [[ ! $(dd if=/dev/block/mmcblk0boot0 bs=512 skip=2047 | grep "EFI PART" ) ]]; then
   ui_print "-- no GPT found, likely nuked by following previous advice to brick preloader"
   ui_print "-- restoring GPT"
   dd if=/${INSTALLER}/amonet/bin/boot0.gpt of=/dev/block/mmcblk0boot0 bs=512 seek=2015
-  ui_print "-- restoring backup PL"
-  dd if=/dev/block/mmcblk0boot0 of=/dev/block/mmcblk0boot0 bs=512 skip=8 seek=520 count=504
 else
   ui_print "-- GPT present, all good"
 fi
