@@ -1,8 +1,6 @@
 # amonet
 
-This is an exploit chain for Fire 7 (2015) (5th gen / ford / KFFOWI). It contains a MediaTek bootrom exploit and a LittleKernel bootloader exploit.
-
-It is also partially applicable to the Fire 7 (2017) (7th gen / austin / KFAUWI), but lacks display support.
+This is an exploit chain for Fire 7 (2017) (7th gen / austin / KFAUWI). It contains a MediaTek bootrom exploit and a LittleKernel bootloader exploit.
 
 For installation instructions, see https://forum.xda-developers.com/amazon-fire/development/unlock-fire-t3899860
 
